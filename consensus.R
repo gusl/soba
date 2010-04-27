@@ -1,4 +1,3 @@
-#source("~/.Rprofile")
 source(jPaste(SBM_PATH, "mcmc.R"))
 load(file="truth")
 load(file="ssRun")

@@ -1,5 +1,3 @@
-##source("~/.Rprofile")
-##setwd("C:/projects/sbm/R")
 source(jPaste(SBM_PATH, "likelihood.R"))
 library(hash)
 library(RColorBrewer)
@@ -319,13 +317,13 @@ accountForDiscard <- function(){
 }
 
 
+
+
 ##no scaling
-sSearch <- function(proposal, initial, objective, nSteps, restart=NULL, logNeglect){
+sSearch_MH <- function(proposal, initial, objective, nSteps, restart=NULL, logNeglect){
   ##neglect: if it's smaller than the max by a factor of 'neglect' or more, throw it out.
   
   nModels <- c(); mass <- c()
-  ##objective <- function(model) loglikVec(ranking,model,rtrue)
-  
   beforeTime <- Sys.time()
   h <- hash()
   sample <- initial ##never counted
@@ -354,8 +352,12 @@ sSearch <- function(proposal, initial, objective, nSteps, restart=NULL, logNegle
   }
   totalTime <- Sys.time() - beforeTime
 
-##  jCat("found __ distinct structures.")
   list(samples=h,runTime=totalTime,mass=mass,nModels=nModels)
+}
+
+
+## P(B | pi, A) \propto P(B) P(pi|B) P(A|B)
+sSearch_B.piA <- function(pi,A){
 }
 
 

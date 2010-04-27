@@ -17,5 +17,5 @@ for (f in folders){
 }
 
 print(list(n=n, consensa=consensa, nConsensa=nConsensa, folders=folders, scores=scores))
-save(n, nConsensa, folders, scores, file="scores")
+save(n, consensa, nConsensa, folders, scores, file="scores")
 

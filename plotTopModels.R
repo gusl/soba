@@ -1,4 +1,3 @@
-##source("~/.Rprofile")
 source(jPaste(SBM_PATH, "visualize.R"))
 source(jPaste(SBM_PATH, "mcmc.R"))
 library(igraph)
@@ -48,10 +47,14 @@ totalMass <- sum(post) ##(totalMass <- postMass(ssRun$samples,objective))
 proportion <- sort(post, decreasing = TRUE)/totalMass
 models <- names(proportion)
 
-##if(doPlots){   ##This one needs to get redone for the sake of the consensus computation - 26Mar2010
+if(doPlots){   ##This one needs to get redone for the sake of the consensus computation - 26Mar2010
   pdf("slide-posterior.pdf", height=5)
+}
   makeHeatmapPostRI(post,randIndex,12,makeText=TRUE, trueStructure=truth$structure, computeConsensus=TRUE) ##TRUE
+
+if(doPlots){
   dev.off()
+}
 ##}
 
 nBlocks <- sapply(models,countBlocks)

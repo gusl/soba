@@ -26,12 +26,12 @@ dotPlot <- function(scores, transparency=.2){
 }
 
 dotPlot(scores, transparency=0.5)
-title("100 runs at r=3, different notions of consensus", xlab="Rand Index from the truth", col="white")
+title("100 runs at r=5, different notions of consensus", xlab="Rand Index from the truth", col="white")
 
 for (i in 1:nConsensa)
   text(0,i,consensa[i], pos=2)
 
-##dev.print(pdf,"consensa(r=3).pdf")
+dev.print(pdf,"consensa(r=5).pdf")
 
 
 

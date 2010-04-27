@@ -1,5 +1,3 @@
-##source("c:/Documents and Settings/Administrator/.Rprofile")
-##setwd("C:/projects/sbm/R")
 source(jPaste(SBM_PATH, "likelihood.R"))
 library(plotrix)
 
@@ -18,7 +16,7 @@ plotHeatmap <- function(ranking,rankingBool,row,rowSize,makeText=FALSE,makeBalls
       text(spacing*(i-1), (row-0.5)*rowSize,ranking[i],pos=4)
     if (makeBalls){
       colorPair <- makeColorPair(ranking[i])
-      jCat("color1 = ", colorPair[1], "; color2 = ", colorPair[2])
+      ##jCat("color1 = ", colorPair[1], "; color2 = ", colorPair[2])
       draw.circle(spacing*(i-0.5), (row-2)*rowSize, 0.3, col=colorPair[1], border=colorPair[1])
       draw.circle(spacing*(i-0.5), (row-2.6)*rowSize, 0.3, col=colorPair[2],border=colorPair[2])  
       ##symbols(spacing*(i-0.5), (row-2)*rowSize,c(0.05),inches=0.0625,bg=colorPair[1],add=TRUE)
@@ -244,9 +242,9 @@ makeHeatmapColabeling <- function(colabelingProbs,makeText=TRUE, trueStructure=N
         cp <- 1
       if(is.na(cp))
         cp <- colabelingProbs[jPaste(j,",",i)] ##getByName(jPaste(i,",",j),colabelingProbs)
-      jCat("i=",i ,"  j=",j,"  cp = ", cp)
+      ##jCat("i=",i ,"  j=",j,"  cp = ", cp)
       if (!is.na(cp)){
-        jCat("cp = ", cp)
+        ##jCat("cp = ", cp)
         color <- colRedBlue(cp)
         rect(i-1,k-j+1,i,k-j,col=color, border="white")
           if(makeText){
