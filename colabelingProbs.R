@@ -5,8 +5,6 @@ library(igraph)
 ##load(file="ranking")
 
 load(file="truth")
-
-config <- read.csv("config.csv")
 load(file="ssRun") ##loads 'post'
 
 init(truth$sMod) ## shouldn't we replace this with a loaded variable?

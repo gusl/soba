@@ -2,7 +2,6 @@ source(jPaste(SBM_PATH, "mcmc.R"))
 load(file="truth")
 load(file="ssRun")
 load(file="colabelingProbs")
-config <- read.csv("config.csv")
 
 
 jCat("truth$structure = ", truth$structure)

@@ -364,8 +364,9 @@ visualizeRun <- function(ranking){
 
 plotStochasticSearchProgress <- function(ssRun){
   mass <- ssRun$mass
+  jCat("length(mass) = ", length(mass))
   nModels <- ssRun$nModels ##number of models visited
-  
+  jCat("config$nIter = ", config$nIter)
   plot(1:config$nIter, mass, col="red", type="l", xlab="", ylab="")
     ##show the restarts
   for(i in 1:(config$nIter/config$nIterPerRestart))
@@ -373,7 +374,9 @@ plotStochasticSearchProgress <- function(ssRun){
   abline(v=0)
   abline(h=0)
   axis(2,col="red")
-  par(new=TRUE)  
+  par(new=TRUE)
+  jCat("length(nModels) = ", length(nModels))
+  jCat("config$nIter = ", config$nIter)
   plot(1:config$nIter, nModels, type="l", col="black", main=jPaste(" # of models = ",max(nModels),"    total mass = ",signif(max(mass),3)), xlab="iteration number", ylab="black: number of models seen     red: mass seen", yaxt="n")
   axis(4,col="black")
 

@@ -3,18 +3,15 @@
 source("~/.Rprofile")
 ##(currentDir <- getwd())
 
-
 doPlots <- TRUE; doPdflatex <- TRUE
 
 args <- commandArgs(TRUE)
 if (length(args)>0) eval(parse(text=args[1]))
 
-
-
 ##ToDo: option to not generate plots
 config <- read.csv("config.csv", strip.white=TRUE)
 
-jCat("RUN-MULTIPLE.R")
+jCat("SIMULATE-MULTIPLE.R")
 jCat("truth = ", config$truth)
 jCat("rtrue = ", config$rtrue)
 jCat("gamma = ", config$gamma)
@@ -45,24 +42,12 @@ for (runIndex in 1:config$nRuns){
   
   ##system("rm -rf current")
   system(jPaste("mkdir ", folderName))
-  system(jPaste("cp config.csv ../slides.tex ", folderName))
+  system(jPaste("cp ../slides.tex ", folderName))
   jCat("going there")
   print(getwd())
   setwd(folderName)
   source(jPaste(SBM_PATH, "generate-true-structure.R"))
   source(jPaste(SBM_PATH, "simulate.R"))
-  source(jPaste(SBM_PATH, "inference.R"))
-  source(jPaste(SBM_PATH, "plotTopModels.R")) ##runs regardless of setting
-  source(jPaste(SBM_PATH, "colabelingProbs.R"))
-  source(jPaste(SBM_PATH, "consensus.R"))
-
-  if(doPdflatex){
-    t <- system(jPaste(PDFLATEX_PATH, " slides.tex"))
-  }
   setwd("..")
-  jCat("coming back")
-  print(getwd())
-  jCat("(b)  runIndex = ", runIndex)
-  
 }
 

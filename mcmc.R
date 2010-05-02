@@ -185,8 +185,25 @@ mh <- function(proposal, initial, objective, burnin, nSamples){
 ## * when the space of models is small / peaked, pruning is not necessary: in MOSS-speak, cprime=0
 ##
 
-nbhd <- function(state){
-  
+
+
+##cz("AAB")
+nbhd <- function(state,k){
+  if (length(state)==1)
+    state <- cz(state)
+  S <- list()
+  count <- 0
+  for (i in 1:length(state)){
+    for (j in 1:k){
+      newState <- state
+      newState[i] <- LETTERS[j]
+      if (concat(newState)!=concat(state)){
+        count <- count+1        
+        S[[count]] <- concat(normalForm(newState))
+      }
+    }
+  }
+  unique(S) ##duplicates appear once we take the normal form
 }
 
 ##quick improvement on mcmc: avoid staying in the high-scoring models:
@@ -270,7 +287,7 @@ sSearchWithRR <- function(proposal, objective, nSteps, nRestarts){
   list(ss=ss,totalMass=totalMass)
 }
 
-cleanup <- function(h,maxObj,logNeglect,n){
+cleanup_MHsearch <- function(h,maxObj,logNeglect,n){
   pile <- list()
   ks <- keys(h); vs <- values(h)
   count <- 0
@@ -333,7 +350,7 @@ sSearch_MH <- function(proposal, initial, objective, nSteps, restart=NULL, logNe
   for (i in 1:nSteps){
     jCat("i = ",i)
     if(!is.null(restart) && (i%%restart)==0){
-      h <- cleanup(h,maxObj,logNeglect,i/restart)
+      h <- cleanup_MHsearch(h,maxObj,logNeglect,i/restart)
       sample <- randomLabeling(length(Nodes))      
     }
     sample <- mhNextSample(proposal, sample, objective)
@@ -355,10 +372,112 @@ sSearch_MH <- function(proposal, initial, objective, nSteps, restart=NULL, logNe
   list(samples=h,runTime=totalTime,mass=mass,nModels=nModels)
 }
 
-
-## P(B | pi, A) \propto P(B) P(pi|B) P(A|B)
-sSearch_B.piA <- function(pi,A){
+##throw out models that score poorly
+cleanup <- function(S,threshold){
+  jCat("threshold = ", threshold)
+    k <- keys(S); v <- values(S)
+    for (i in 1:length(S)){
+    if (v[i]<threshold){
+      ##print(h)
+      ##jCat("k[i] = ", k[i])
+      S[[k[i]]] <- NULL
+    }
+  }
+  S
 }
+
+##
+h <- hash()
+h[["A"]] <- 5
+h[["B"]] <- 7
+h[["C"]] <- 8
+h[["D"]] <- 4
+h
+cleanup(h,6)
+h
+
+
+
+## randomly pick one
+## explore neighborhood
+## throw out the ones
+## 
+sSearch_MOSS <- function(proposal, initial, objective, nSteps, restart=NULL, logNeglect){
+  nLabels <- 3
+  neighborhood <- nbhd
+  logcprime <- log(0.5)
+  maxIter <- 10000
+  maxSizeS <- 1000
+  S <- hash()
+  unexploredModels <- hash() ##subset of S
+  nModels <- c(); mass <- c(); incumbents <- c(); objectives <- c()
+
+  initialModel <- concat(normalForm(randomLabeling(length(Nodes))))
+  incumbent <- initialModel
+  initialObj <- objective(initialModel)
+  S[initialModel] <- initialObj
+  fmax <- initialObj
+  unexploredModels[initialModel] <- 1
+  
+  for (i in 1:maxIter){
+    jCat("MOSS: i = ", i)
+    ##jCat("S = ")
+    ##print(S)
+    if(length(unexploredModels)>0){
+      ##randomIndex <- sample(1:length(unexploredModels),1,prob=exp(values(S))) ##not sampling uniformly
+      ##m <-  unexploredModels[[randomIndex]]
+
+      isGood <- FALSE
+      while(!isGood){ ##inefficient but correct
+        jCat("length(S) = ", length(S))
+        ##print(S)
+        ##jCat("unexploredModels = ")
+        ##print(unexploredModels)
+        m <- sample(keys(S), 1, prob=exp(values(S)))
+        jCat("m = ", m)
+        if (m %in% keys(unexploredModels)) isGood <- TRUE ##break ##only proceed if m is unexplored
+      }
+      jCat("This neighborhood has not been explored yet.")      
+    } else break
+    neighbors <- neighborhood(m,truth$numLabels) ##do we really want truth$numLabels?
+    jCat(" Evaluating ", length(neighbors), " neighbors.")
+    for (mprime in neighbors){
+      jCat("|  mprime = ", mprime)
+      logpost <- objective(mprime)
+      ##jCat("|  S = ")
+      ##print(S)
+      if ((logpost>logcprime+fmax) & (!mprime %in% keys(S))){
+        unexploredModels[mprime] <- 1 ##add mprime to unexploredModels          
+        S[mprime] <- logpost             ##add mprime to S          
+        
+        if (length(S) > maxSizeS) {}  ##do nothing  (##remove worst model)
+        if (logpost>fmax){
+          incumbent <- mprime
+          fmax <- logpost
+          S <- cleanup(S,logcprime+fmax)
+        }
+      }      
+    }
+    unexploredModels[m] <- NULL ##ToDo: mark as explored with a "0", instead of removing it
+    
+    nModels[i] <- length(S)
+    mass[i] <- sum(exp(values(S))); jCat("mass[i] = ", mass[i])
+    incumbents[i] <- incumbent; jCat("incumbent = ", incumbent)
+    objectives[i] <- fmax
+  }
+  jCat("MOSS: finished")
+  jCat("MOSS: returning ", length(S), " models.")
+  list(samples=S,runTime=NA,mass=mass,nModels=nModels)
+}
+
+
+
+
+
+##
+sSearch_Spiral <- function(proposal, initial, objective, nSteps, restart=NULL, logNeglect){
+}
+
 
 
 ##explores the entire 'nbhd'

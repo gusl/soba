@@ -195,7 +195,7 @@ computeHistogram <- function(v,l){
 loglikVec <- function(ranking,labeling,r,loglikFun=loglik){
   ##jCat("loglikVec: labeling=", labeling, "      ranking = ", ranking)
   Ws <- numWithinEdgesVec(labeling)
-##  jCat("Ws = ",Ws)
+  ##jCat("Ws = ",Ws)
   Bs <- ne - Ws
   isWB <- isWithinBlockVec(labeling)
 

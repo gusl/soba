@@ -24,25 +24,25 @@ Labels <- truth$Labels ##(Labels <- LETTERS[1:numLabels])
 (initial <- randomLabeling(length(truth$Nodes)))
 
 ##### P(B | pi)
-objective <- function(model) loglikVec(ranking,model,truth$r)
+objective <- function(model) loglikVec(ranking,cz(model),truth$r)
 prop <- function(x) gProposalFixedNLabels(x,config$jumpSize,numLabels)
 ##prop <- function(x) gProposal(x,config$jumpSize)
 
 Rprof("ram-profile.txt", memory.profiling=TRUE)
 beforeT <- as.numeric(as.POSIXct(Sys.time()))
 
-jCat("b: sSearch = ")
-print(sSearch)
-
 ssRun <- sSearch(prop, initial, objective, config$nIter, restart=config$nIterPerRestart, logNeglect=1000)
+
 afterT <-  as.numeric(as.POSIXct(Sys.time()))
 Rprof(NULL)
 
 write(afterT - beforeT, file="time.txt")
 
 
+##rename 'loglik' to 'loglikRanking'
+
 ##### P(B | pi, A)
-##objective <- function(model) loglikExtended(ranking,network,model,truth$r, truth$gamma, truth$delta)
+##objective <- function(model) loglikRanking(ranking,model,truth$r, truth$gamma, truth$delta) + loglikNetwork(network)
 ##
 ##ssRun <- sSearch(prop, initial, objective, config$nIter, restart=config$nIterPerRestart, logNeglect=1000)
 

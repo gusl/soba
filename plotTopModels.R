@@ -4,7 +4,6 @@ library(igraph)
 
 load(file="truth")
 load(file="ranking")
-config <- read.csv("config.csv")
 load(file="ssRun")
 
 init(truth$sMod)
