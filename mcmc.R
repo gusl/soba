@@ -189,8 +189,8 @@ mh <- function(proposal, initial, objective, burnin, nSamples){
 
 ##cz("AAB")
 nbhd <- function(state,k){
-  if (length(state)==1)
-    state <- cz(state)
+##  if (length(state)==1)
+##    state <- cz(state)
   S <- list()
   count <- 0
   for (i in 1:length(state)){
@@ -205,6 +205,12 @@ nbhd <- function(state,k){
   }
   unique(S) ##duplicates appear once we take the normal form
 }
+
+
+nbhd(cz("ABC"),3)
+
+nbhd("ABC",3)
+
 
 ##quick improvement on mcmc: avoid staying in the high-scoring models:
 ## reverse simulated annealing: temperature gets higher over time
@@ -402,17 +408,108 @@ h
 ## explore neighborhood
 ## throw out the ones
 ## 
+
+
 sSearch_MOSS <- function(proposal, initial, objective, nSteps, restart=NULL, logNeglect){
-  nLabels <- 3
-  neighborhood <- nbhd
-  logcprime <- log(0.5)
+  ## ToDo:
+  ## get rid of 'proposal': that is a property of sSearch_MH
+
+  beforeTime <- Sys.time()
+
+  ## run greedy for 100 random restarts
+  localMaxima <- hash()
+  for (i in 1:1){
+    jCat("--- Greedy maximization:  random restart #", i)
+    initialModel <- concat(normalForm(randomLabeling(length(Nodes))))
+    localMaximum <- greedyMaximize(objective, nbhd, initialModel)$incumbent
+    if (!has.key(localMaximum,localMaxima))
+      localMaxima[localMaximum] <- 1
+    else
+      localMaxima[localMaximum] <-  localMaxima[[localMaximum]] + 1
+  }
+ 
+  print(localMaxima)
+
+  ## now... are there any local minima we wish to discard?
+
+  peaks <- sapply(keys(localMaxima), objective)  
+  names(peaks) <- keys(localMaxima)
+  jCat("peaks = "); print(peaks)
+  peaks <- sort(peaks, decreasing=TRUE)[1] ##only keep the top one
+  jCat("after: peaks = "); print(peaks)
+  
+  ##cleanup(, max(heights)+log(0.01))
+  
+  ## run MOSS once for each
+  mossRun <- NULL
+  count <- 0
+  for (m in names(peaks)){
+    count <- count+1
+    mossRun <- moss(m, objective, nSteps, restart=NULL, logNeglect)
+  }
+  
+  jCat("mossRun = ")
+  print(mossRun)
+  totalTime <- Sys.time() - beforeTime
+  list(samples=mossRun$samples,runTime=totalTime,mass=mossRun$mass,nModels=mossRun$nModels)
+  
+##   jCat("--1--")
+##   mossRuns[1]$samples
+##     jCat("--2--")
+##   keys(mossRuns[1]$samples)
+##     jCat("--3--")
+  
+##   ## merge the results
+##   mergedSamples <- unique(c(keys(mossRuns[1]$samples), keys(mossRuns[2]$samples)))
+##   jCat("mergedSamples = "); print(mergedSamples)
+##   mergedObj <- objective(mergedSamples)
+##   jCat("mergedObj = "); print(mergedObj)
+##   mergedValues <- exp(mergedObj)
+##   jCat("mergedValues = "); print(mergedValues)
+##   mergedMass <- sum(mergedValues)
+##   jCat("mergedMass = "); print(mergedMass)
+}
+  
+
+greedyMaximize <- function(objective, neighborhood, initial){
+  incumbent <- initial
+  fmax <- objective(incumbent)
+  while(TRUE){
+    jCat("incumbent = ", incumbent)
+    jCat("fmax = ", fmax)
+    neighbors <- neighborhood(cz(incumbent),3)
+    ##jCat("neighbors = ")
+    ##print(neighbors)
+    scores <- sapply(neighbors,objective)
+    ##jCat("scores = ", scores)
+    bestNeighborScore <- max(scores)
+    
+    ##argmax
+    if(bestNeighborScore > fmax){
+      fmax <- bestNeighborScore
+      incumbent <- neighbors[[which.max(scores)]]
+    }
+    else break    
+  }
+  list(incumbent=incumbent, fmax=fmax)
+}
+
+
+fun <- function(model) sum(cz(model)=="A")
+
+
+greedyMaximize(fun, nbhd, "ABC")
+
+
+moss <- function(initialModel, objective, nSteps, restart=NULL, logNeglect){  
+  neighborhood <- function(model) nbhd(cz(model),truth$numLabels)
+  logcprime <- log(0.01)
   maxIter <- 10000
   maxSizeS <- 1000
   S <- hash()
   unexploredModels <- hash() ##subset of S
   nModels <- c(); mass <- c(); incumbents <- c(); objectives <- c()
 
-  initialModel <- concat(normalForm(randomLabeling(length(Nodes))))
   incumbent <- initialModel
   initialObj <- objective(initialModel)
   S[initialModel] <- initialObj
@@ -435,7 +532,7 @@ sSearch_MOSS <- function(proposal, initial, objective, nSteps, restart=NULL, log
       ##}
       jCat("We now are going to explore m = ", m)
     } else break
-    neighbors <- neighborhood(m,truth$numLabels) ##do we really want truth$numLabels?
+    neighbors <- neighborhood(m) ##do we really want truth$numLabels?
     jCat(" Evaluating ", length(neighbors), " neighbors.")
     for (mprime in neighbors){
       jCat("|  mprime = ", mprime)
