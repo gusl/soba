@@ -424,20 +424,16 @@ sSearch_MOSS <- function(proposal, initial, objective, nSteps, restart=NULL, log
     ##jCat("S = ")
     ##print(S)
     if(length(unexploredModels)>0){
-      ##randomIndex <- sample(1:length(unexploredModels),1,prob=exp(values(S))) ##not sampling uniformly
-      ##m <-  unexploredModels[[randomIndex]]
+      m <- sample(keys(unexploredModels),1) ##should not sample uniformly      
 
-      isGood <- FALSE
-      while(!isGood){ ##inefficient but correct
-        jCat("length(S) = ", length(S))
-        ##print(S)
-        ##jCat("unexploredModels = ")
-        ##print(unexploredModels)
-        m <- sample(keys(S), 1, prob=exp(values(S)))
-        jCat("m = ", m)
-        if (m %in% keys(unexploredModels)) isGood <- TRUE ##break ##only proceed if m is unexplored
-      }
-      jCat("This neighborhood has not been explored yet.")      
+      ##isGood <- FALSE
+      ##while(!isGood){ ##inefficient but correct. ToDo: sample directly from unexploredModels
+      ##  jCat("length(S) = ", length(S))
+      ##  m <- sample(keys(S), 1, prob=exp(values(S)))
+      ##  jCat("m = ", m)
+      ##  if (m %in% keys(unexploredModels)) isGood <- TRUE ##break ##only proceed if m is unexplored
+      ##}
+      jCat("We now are going to explore m = ", m)
     } else break
     neighbors <- neighborhood(m,truth$numLabels) ##do we really want truth$numLabels?
     jCat(" Evaluating ", length(neighbors), " neighbors.")

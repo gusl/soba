@@ -47,8 +47,14 @@ write(afterT - beforeT, file="time.txt")
 ##ssRun <- sSearch(prop, initial, objective, config$nIter, restart=config$nIterPerRestart, logNeglect=1000)
 
 
+
 models <- keys(ssRun$samples)
-post <- sapply(models, function(x) exp(objective(cz(x))))
+jCat("ssRun$samples = ")
+print(ssRun$samples)
+
+post <- sapply(models, function(x) exp(objective(x)))
+jCat("post = ")
+print(post)
 
 save(ssRun, post, objective, file="ssRun")
 
