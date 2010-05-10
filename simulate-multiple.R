@@ -17,6 +17,8 @@ jCat("rtrue = ", config$rtrue)
 jCat("gamma = ", config$gamma)
 jCat("delta = ", config$delta)
 jCat("searchStrategy = ", jPaste(config$searchStrategy))
+jCat("generateRanking = ", config$generateRanking)
+jCat("generateNetwork = ", config$generateNetwork)
 
 jCat("nRuns = ", config$nRuns)
 

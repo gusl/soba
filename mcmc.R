@@ -144,7 +144,7 @@ convertVListToVec <- function(vList){
 
 
 mh <- function(proposal, initial, objective, burnin, nSamples){
-  beforeTime <- Sys.time()
+  beforeTime <- as.numeric(Sys.time())
   h <- hash()
   
   sample <- initial ##never counted
@@ -171,7 +171,7 @@ mh <- function(proposal, initial, objective, burnin, nSamples){
     else
       h[sampleNormalized] <- 1
   }
-  totalTime <- Sys.time() - beforeTime
+  totalTime <- as.numeric(Sys.time()) - beforeTime
   list(samples=h,runTime=totalTime)
 }
 ##need to concat the samples into strings
@@ -230,7 +230,7 @@ scaleObjective <- function(obj,n) function(x) n*obj(x)
 ### if we get <30% rejection, spiken the objective 10-fold
 
 sSearchAdaptive <- function(proposal, initial, objective, nSteps){
-  beforeTime <- Sys.time()
+  beforeTime <- as.numeric(Sys.time())
   h <- hash()
   sample <- initial ##never counted
 
@@ -260,7 +260,7 @@ sSearchAdaptive <- function(proposal, initial, objective, nSteps){
       prevSampleNormalized <- sampleNormalized
     }
   }
-  totalTime <- Sys.time() - beforeTime
+  totalTime <- as.numeric(Sys.time()) - beforeTime
   
   ##  jCat("found __ distinct structures.")
   list(samples=h,runTime=totalTime)
@@ -346,8 +346,8 @@ accountForDiscard <- function(){
 sSearch_MH <- function(proposal, initial, objective, nSteps, restart=NULL, logNeglect){
   ##neglect: if it's smaller than the max by a factor of 'neglect' or more, throw it out.
   
-  nModels <- c(); mass <- c()
-  beforeTime <- Sys.time()
+  nModels <- c(); mass <- c(); time <- c();
+  beforeTime <- as.numeric(Sys.time())
   h <- hash()
   sample <- initial ##never counted
   maxObj <- objective(cz(sample))
@@ -372,10 +372,11 @@ sSearch_MH <- function(proposal, initial, objective, nSteps, restart=NULL, logNe
     nModels[i] <- length(keys(h))
     ##post <- sapply(keys(h), function(x) exp(objective(cz(x))))
     mass[i] <- sum(exp(values(h))) #keep track of post
+    time[i] <- as.numeric(Sys.time()) - beforeTime
   }
-  totalTime <- Sys.time() - beforeTime
-
-  list(samples=h,runTime=totalTime,mass=mass,nModels=nModels)
+  totalTime <- as.numeric(Sys.time()) - beforeTime
+  
+  list(samples=h,runTime=time,mass=mass,nModels=nModels)
 }
 
 ##throw out models that score poorly
@@ -410,11 +411,14 @@ h
 ## 
 
 
+##beforeTime <- NULL ##declare as global
+
 sSearch_MOSS <- function(proposal, initial, objective, nSteps, restart=NULL, logNeglect){
   ## ToDo:
   ## get rid of 'proposal': that is a property of sSearch_MH
 
-  beforeTime <- Sys.time()
+  beforeTime <- as.numeric(Sys.time())
+  jCat("beforeTime = ", beforeTime)
 
   ## run greedy for 100 random restarts
   localMaxima <- hash()
@@ -445,13 +449,13 @@ sSearch_MOSS <- function(proposal, initial, objective, nSteps, restart=NULL, log
   count <- 0
   for (m in names(peaks)){
     count <- count+1
-    mossRun <- moss(m, objective, nSteps, restart=NULL, logNeglect)
+    mossRun <- moss(m, objective, nSteps, restart=NULL, logNeglect, beforeTime)
   }
   
   jCat("mossRun = ")
   print(mossRun)
-  totalTime <- Sys.time() - beforeTime
-  list(samples=mossRun$samples,runTime=totalTime,mass=mossRun$mass,nModels=mossRun$nModels)
+
+  list(samples=mossRun$samples,runTime=mossRun$runTime,mass=mossRun$mass,nModels=mossRun$nModels)
   
 ##   jCat("--1--")
 ##   mossRuns[1]$samples
@@ -501,14 +505,14 @@ fun <- function(model) sum(cz(model)=="A")
 greedyMaximize(fun, nbhd, "ABC")
 
 
-moss <- function(initialModel, objective, nSteps, restart=NULL, logNeglect){  
+moss <- function(initialModel, objective, nSteps, restart=NULL, logNeglect, beforeTime){  
   neighborhood <- function(model) nbhd(cz(model),truth$numLabels)
   logcprime <- log(0.01)
   maxIter <- 10000
   maxSizeS <- 1000
   S <- hash()
   unexploredModels <- hash() ##subset of S
-  nModels <- c(); mass <- c(); incumbents <- c(); objectives <- c()
+  nModels <- c(); mass <- c(); incumbents <- c(); objectives <- c(); runTime <- c()
 
   incumbent <- initialModel
   initialObj <- objective(initialModel)
@@ -555,12 +559,13 @@ moss <- function(initialModel, objective, nSteps, restart=NULL, logNeglect){
     
     nModels[i] <- length(S)
     mass[i] <- sum(exp(values(S))); jCat("mass[i] = ", mass[i])
+    runTime[i] <- as.numeric(Sys.time()) - beforeTime; jCat("runTime[i] = ", runTime[i])
     incumbents[i] <- incumbent; jCat("incumbent = ", incumbent)
     objectives[i] <- fmax
   }
   jCat("MOSS: finished")
   jCat("MOSS: returning ", length(S), " models.")
-  list(samples=S,runTime=NA,mass=mass,nModels=nModels)
+  list(samples=S,runTime=runTime,mass=mass,nModels=nModels)
 }
 
 

@@ -49,8 +49,10 @@ write(afterT - beforeT, file="time.txt")
 
 
 models <- keys(ssRun$samples)
-jCat("ssRun$samples = ")
-print(ssRun$samples)
+
+jCat("ssRun = "); print(ssRun)
+##jCat("ssRun$samples = ")
+##print(ssRun$samples)
 
 post <- sapply(models, function(x) exp(objective(x)))
 jCat("post = ")

@@ -34,7 +34,7 @@ makeColorPair <- function(edgeName){
 ## * each ranking corresponds to a row
 ## * the arrivals are shown from left(first) to right(last)
 ##output: none
-plotRuns <- function(runs,title="edge ranking",makeText=FALSE,makeBalls=TRUE){
+plotRankings <- function(runs,title="edge ranking",makeText=FALSE,makeBalls=TRUE){
   n <- length(runs$arrivals)
   k <- length(runs$arrivals[[1]])
   plot(c(0,k),c(0,n),type="n",bty="n",xaxt="n",yaxt="n"
@@ -282,7 +282,7 @@ getColor <- function(edgeName){
 
 
 ## graphNEL
-visualizeStructure <- function(gr, title="complete graph"){
+visualizeStructure <- function(gr, title=""){
 ##  gr <- kn
   width <- 20
   ##edgeFoo <- do.call(rbind, strsplit(edgeNames(kn), split = "~"))
@@ -363,12 +363,20 @@ visualizeRun <- function(ranking){
 
 
 plotStochasticSearchProgress <- function(ssRun){
+  jCat("### plotStochasticSearchProgress ###")
+  jCat("ssRun = "); print(ssRun)
   nIter <- length(mass)
   mass <- ssRun$mass
+  time <- ssRun$runTime
+  jCat("time = ")
+  print(time)
+  jCat("length(time) = ",length(time))
+  jCat("length(mass) = ",length(mass))
   jCat("nIter = ", nIter)
   nModels <- ssRun$nModels ##number of models visited
   ##jCat("nIter = ", nIter)
-  plot(1:length(mass), mass, col="red", type="l", xlab="", ylab="")
+  plot(c(0,time), c(0,mass), col="red", type="l", xlab="", ylab="")
+  points(c(0,time), c(0,mass), col="red", type="p", xlab="", ylab="")
     ##show the restarts
   if(config$searchStrategy=="sSearch_MH")
     for(i in 1:(nIter/config$nIterPerRestart))
@@ -379,7 +387,7 @@ plotStochasticSearchProgress <- function(ssRun){
   par(new=TRUE)
   jCat("length(nModels) = ", length(nModels))
   ##jCat("nIter = ", nIter)
-  plot(1:nIter, nModels, type="l", col="black", main=jPaste(" # of models = ",max(nModels),"    total mass = ",signif(max(mass),3)), xlab="iteration number", ylab="black: number of models seen     red: mass seen", yaxt="n")
+  plot(c(0,time), c(0,nModels), type="b", col="black", main=jPaste("algorithm: ", config$searchStrategy, "\n total mass = ",signif(max(mass),3)), xlab="time (in seconds)", ylab="black: number of models seen     red: mass seen", yaxt="n")
   axis(4,col="black")
 
 }

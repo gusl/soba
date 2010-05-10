@@ -18,8 +18,7 @@ initTest <- function(){
   numLabels <- length(vList); write(file="numLabels.tex",numLabels); Labels <- LETTERS[1:numLabels]
   ##rtrue <<- 10;
   write(file="r.tex",config$rtrue)
-
-  list(Nodes=Nodes,sMod=sMod,structure=structure,numLabels=numLabels,Labels=Labels,r=config$rtrue)
+  list(Nodes=Nodes,sMod=sMod,structure=structure,numLabels=numLabels,Labels=Labels,r=config$rtrue, gamma=config$gamma, delta=config$delta)
 }
 
 truth <- initTest()

@@ -1,6 +1,11 @@
 library(graph)
 ##library(Rgraphviz)
 
+
+### labeling always stored as a vector
+### except when read in from config.csv
+
+
 ##initializing the true model
 init <- function(sMod){
   sMod <<- sMod
@@ -11,6 +16,7 @@ init <- function(sMod){
   names(vList) <<- LETTERS[1:M]
   (vVect <<- unlist(vList)) ## vVect: vector of all nodes (ignores modules)
   Nodes <<- unlist(vList, use.names=FALSE)
+  trueLabeling <<- sapply(names(unlist(vList)),function(str) cz(str)[1])
   numLabels <<- length(vList)
   
   ##all edges are appearing twice!
@@ -19,6 +25,10 @@ init <- function(sMod){
   
   names(eList) <<- vVect
   (kn <<- new("graphNEL", nodes = vVect, edgeL = eList))
+
+  ##is it possible to create a graphNEL by passing edge names instead?
+  
+  
   (gr2 <<- new("graphNEL", nodes = vVect))
 
   ##set up labels
@@ -81,7 +91,7 @@ normalize <- function(ws){
 ##sample edge arrivals
 
 ## return arrivals, arrivalTypes: R does not allow side-effects
-generate <- function(r) {
+generateRanking <- function(r) {
   arrivals <- sample(edgeNames(kn), ne, replace=FALSE, prob=normalize(weights(r)))
   list(arrivals=arrivals)
 }
@@ -142,10 +152,10 @@ vlistCoordinates <- function(vList,node){
 ##returns a function
 ##for example, try isWithinBlock(mergings[[1]])("A1~C2")
 
-
+##e.g. vec = c("A" "A" "A" "B" "B")
 isWithinBlockVec <- function(vec){
   nodes <- unlist(vList)
-  h <- hash(keys=nodes,values=1:length(nodes)) ##efficiency: pull this out
+  h <- hash(keys=Nodes,values=1:length(Nodes)) ##efficiency: pull this out
   return(function(edgeName){
     ##jCat("edgeName = ", edgeName)
     node1 <- parseTilde(edgeName)[1]
@@ -242,17 +252,49 @@ mergeBlocks <- function(sMod, index1, index2){
 ##randomly generate rankings
 ##input: number of runs n
 ##output: n rankings (coarsened to edge-type)
-doExpt <- function(r,nRuns){
+generateRankings <- function(r,nRuns){
   ll <- list()
   arrivalTypes <- c()
   arrivals <- list()
   for (i in 1:nRuns){
-    gen <- generate(r)
+    gen <- generateRanking(r)
     (arrivals[[i]] <- gen$arrivals)
     ##(arrivalTypes[[i]] <- gen$arrivalTypes)
   }
   list(arrivals=arrivals)
 } ##STOPPED PASSING arrivalTypes
+
+
+
+generateNetwork <- function(gamma,delta){
+  isWB <- isWithinBlockVec(trueLabeling)
+  g <- new("graphNEL", nodes = vVect)
+  for(edge in edgeNames(kn)){
+    jCat(edge)
+    node1 <- parseTilde(edge)[1]
+    node2 <- parseTilde(edge)[2]
+    
+    if(isWB(edge)){
+      ## present with probability gamma
+      if(runif(1)<gamma){
+        jCat("W: " , edge, " is present.")
+        g <- addEdge(node1,node2,g)
+      } else {
+        jCat("W: " , edge, " is absent.")
+      }
+    } else {
+      if(runif(1)<delta){
+        jCat("B: ", edge, " is present.")
+        g <- addEdge(node1,node2,g)
+      } else {
+        jCat("B: ", edge, " is absent.")
+      }
+    }
+    jCat("edge names = ", edgeNames(g))
+  }
+  g
+}
+
 
 generateMerge <- function(vList,i,j){
   newLetter <- availableLetters[1]
@@ -426,7 +468,7 @@ oct06 <- function(r,sMod=sMod,nRuns=nRuns,s=s){
     sMod<<-sMod ##does that make it global
     init(sMod)
     jCat("Running experiments...")
-    runs <- doExpt(r,nRuns)
+    runs <- generateRankings(r,nRuns)
     jCat("Computing likelihoods...")
     lls <- computeLikelihoods(runs,r)
   }
@@ -452,7 +494,7 @@ nov04 <- function(rtrue,r,sMod=sMod,nRuns=nRuns,s=s){
     sMod<<-sMod ##does that make it global
     init(sMod)
     jCat("Running experiments...")
-    runs <- doExpt(rtrue,nRuns)
+    runs <- generateRankings(rtrue,nRuns)
     jCat("Computing likelihoods...")
     ##for (i in 1:length(rs))
     lls1 <- computeLikelihoodsRelabelings(runs,r)
@@ -517,7 +559,7 @@ oct27 <- function(rtrue,sMod=sMod,nRuns=nRuns,s=s,rs,loglikFunName="loglik"){
     sMod<<-sMod ##does that make it global
     init(sMod)
     jCat("Running experiments...")
-    runs <- doExpt(rtrue,nRuns)
+    runs <- generateRankings(rtrue,nRuns)
     jCat("Computing likelihoods...")
     lls <- list()
     for (i in 1:length(rs))
@@ -588,7 +630,7 @@ makeList <- function(v){
 ##sMod <- c(1,2,3,3,3,3,4,5,5,7,9)
 ##init(sMod)
 ##r <- 10
-##run <- doExpt(10,3)
+##run <- generateRankings(10,3)
 ##s <- randomSearch(runs,sMod,50,50)
 ##plotAndWritePDF(sMod,run,s)
 
@@ -615,7 +657,7 @@ getPdfs <- function(l){
 ##
 sep30 <- function(runs=NULL, nRuns=1){ ##optional argument: set of runs
   if (is.null(runs)){
-    runs <- doExpt(r,nRuns)
+    runs <- generateRankings(r,nRuns)
   }
   
   liks <- computeLikelihoods(runs,r)
