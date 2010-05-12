@@ -3,6 +3,8 @@
 source("~/.Rprofile")
 ##(currentDir <- getwd())
 
+library(Rgraphviz)
+
 doPlots <- TRUE; doPdflatex <- TRUE
 
 args <- commandArgs(TRUE)
@@ -11,15 +13,17 @@ if (length(args)>0) eval(parse(text=args[1]))
 ##ToDo: option to not generate plots
 config <- read.csv("config.csv", strip.white=TRUE)
 
+
+config$truth <- jPaste(config$truth)
+
 jCat("SIMULATE-MULTIPLE.R")
 jCat("truth = ", config$truth)
+jCat("generateRanking = ", config$generateRanking)
 jCat("rtrue = ", config$rtrue)
+jCat("generateNetwork = ", config$generateNetwork)
 jCat("gamma = ", config$gamma)
 jCat("delta = ", config$delta)
 jCat("searchStrategy = ", jPaste(config$searchStrategy))
-jCat("generateRanking = ", config$generateRanking)
-jCat("generateNetwork = ", config$generateNetwork)
-
 jCat("nRuns = ", config$nRuns)
 
 

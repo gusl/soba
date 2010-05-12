@@ -98,8 +98,7 @@ generateRanking <- function(r) {
 
 ##input: a vector with ranking of "W"s/TRUE (withins) and "B"s/FALSE (between), and their numbers
 ##output: log-likelihood of this ranking
-loglik <- function(arrivalTypes,Ws,Bs,r) { ##Ws: # of W remaining
-  ##  print("entered loglik")
+loglikRanking <- function(arrivalTypes,Ws,Bs,r) { ##Ws: # of W remaining
   stopifnot(Ws==sum(arrivalTypes))
   sum <- 0
   num <- NULL
@@ -202,7 +201,7 @@ computeHistogram <- function(v,l){
 
 
 ##should we name the nodes as numbers?
-loglikVec <- function(ranking,labeling,r,loglikFun=loglik){
+loglikRankingVec <- function(ranking,labeling,r,loglikFun=loglikRanking){
   ##jCat("loglikVec: labeling=", labeling, "      ranking = ", ranking)
   Ws <- numWithinEdgesVec(labeling)
   ##jCat("Ws = ",Ws)
@@ -265,37 +264,6 @@ generateRankings <- function(r,nRuns){
 } ##STOPPED PASSING arrivalTypes
 
 
-
-generateNetwork <- function(gamma,delta){
-  isWB <- isWithinBlockVec(trueLabeling)
-  g <- new("graphNEL", nodes = vVect)
-  for(edge in edgeNames(kn)){
-    jCat(edge)
-    node1 <- parseTilde(edge)[1]
-    node2 <- parseTilde(edge)[2]
-    
-    if(isWB(edge)){
-      ## present with probability gamma
-      if(runif(1)<gamma){
-        jCat("W: " , edge, " is present.")
-        g <- addEdge(node1,node2,g)
-      } else {
-        jCat("W: " , edge, " is absent.")
-      }
-    } else {
-      if(runif(1)<delta){
-        jCat("B: ", edge, " is present.")
-        g <- addEdge(node1,node2,g)
-      } else {
-        jCat("B: ", edge, " is absent.")
-      }
-    }
-    jCat("edge names = ", edgeNames(g))
-  }
-  g
-}
-
-
 generateMerge <- function(vList,i,j){
   newLetter <- availableLetters[1]
   names(vList[[i]]) <- rep(newLetter,sMod[i])
@@ -352,7 +320,7 @@ useTimeStamp <- FALSE
 
 ##input: rankings; optional: loglikFun
 ##output: for each ranking (row), the likelihood for each model (column)
-computeLikelihoods <- function(runs,r,loglikFun=loglik){ ##ToDo: models
+computeLikelihoods <- function(runs,r,loglikFun=loglikRanking){ ##ToDo: models
   trueLik <- list(); mergLiks <- list(); splLiks <- list()
 
   mergings <- generateMergings(vList)
@@ -372,7 +340,7 @@ computeLikelihoods <- function(runs,r,loglikFun=loglik){ ##ToDo: models
 ##concatenation issue!
 
 
-computeLikelihoodsRelabelings <- function(runs,r,loglikFun=loglik){
+computeLikelihoodsRelabelings <- function(runs,r,loglikFun=loglikRanking){
   trueLik <- list(); relLiks <- list(); set1Liks <- list(); set2Liks <- list()
   trueW <- numWithinEdges(vList)
   relabelings <- generateRelabelings(vList)
@@ -546,7 +514,7 @@ getColor <- function(i) jCols[i]
 
 ##simulate using rtrue
 ##plot likelihoods for rs
-oct27 <- function(rtrue,sMod=sMod,nRuns=nRuns,s=s,rs,loglikFunName="loglik"){
+oct27 <- function(rtrue,sMod=sMod,nRuns=nRuns,s=s,rs,loglikFunName="loglikRanking"){
   loglikFun <- eval(parse(text=loglikFunName))
   jCat("using ", loglikFunName)
   if(!is.null(s)){
@@ -679,3 +647,36 @@ sep30 <- function(runs=NULL, nRuns=1){ ##optional argument: set of runs
     list(runs=runs,liks=liks)
 }
 
+## generateNetwork
+## loglikNetwork
+
+
+generateNetwork <- function(gamma,delta){
+  isWB <- isWithinBlockVec(trueLabeling)
+  g <- new("graphNEL", nodes = vVect)
+  for(edge in edgeNames(kn)){
+    jCat(edge)
+    node1 <- parseTilde(edge)[1]
+    node2 <- parseTilde(edge)[2]
+    
+    if(isWB(edge)){
+      ## present with probability gamma
+      if(runif(1)<gamma){
+        ##jCat("W: " , edge, " is present.")
+        g <- addEdge(node1,node2,g)
+      } else {
+        ##jCat("W: " , edge, " is absent.")
+      }
+    } else {
+      if(runif(1)<delta){
+        ##jCat("B: ", edge, " is present.")
+        g <- addEdge(node1,node2,g)
+      } else {
+        ##jCat("B: ", edge, " is absent.")
+      }
+    }
+  }
+  g
+}
+
+##loglikNetwork <- function(model)

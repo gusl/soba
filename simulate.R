@@ -7,9 +7,9 @@ load(file="truth")
 init(truth$sMod)
 
 if(config$generateRanking) {
-  ##  (run <- generateRankings(truth$r,1))
-  ##  (ranking <- run$arrivals[[1]])
-  (ranking <- generateRanking(truth$r))
+  (run <- generateRankings(truth$r,1))
+  (ranking <- run$arrivals[[1]])
+  ## (ranking <- generateRanking(truth$r))
 
   if (doPlots){
     pdf("slide-ranking.pdf",height=2.5,width=7)

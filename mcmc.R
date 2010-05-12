@@ -393,17 +393,6 @@ cleanup <- function(S,threshold){
   S
 }
 
-##
-h <- hash()
-h[["A"]] <- 5
-h[["B"]] <- 7
-h[["C"]] <- 8
-h[["D"]] <- 4
-h
-cleanup(h,6)
-h
-
-
 
 ## randomly pick one
 ## explore neighborhood
@@ -502,7 +491,7 @@ greedyMaximize <- function(objective, neighborhood, initial){
 fun <- function(model) sum(cz(model)=="A")
 
 
-greedyMaximize(fun, nbhd, "ABC")
+## greedyMaximize(fun, nbhd, "ABC")
 
 
 moss <- function(initialModel, objective, nSteps, restart=NULL, logNeglect, beforeTime){  
@@ -568,13 +557,6 @@ moss <- function(initialModel, objective, nSteps, restart=NULL, logNeglect, befo
   list(samples=S,runTime=runTime,mass=mass,nModels=nModels)
 }
 
-
-
-
-
-##
-sSearch_Spiral <- function(proposal, initial, objective, nSteps, restart=NULL, logNeglect){
-}
 
 
 
