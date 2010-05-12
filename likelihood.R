@@ -679,4 +679,28 @@ generateNetwork <- function(gamma,delta){
   g
 }
 
-##loglikNetwork <- function(model)
+
+loglikNetwork <- function(network, labeling, gamma, delta) {
+  s00 <- 0; s10 <- 0; s01 <- 0; s11 <- 0;
+
+  isWB <- isWithinBlockVec(labeling)
+  
+  for (edge in edgeNames(network)){ ##present edges
+    ##jCat(edge)
+    if(isWB(edge)) {
+      s11 <- s11+1
+    } else {
+      s01 <- s01+1
+    }
+  }
+  for (edge in edgeNames(complement(network))){ ##absent edges
+    if(isWB(edge)) {
+      s10 <- s10+1
+    } else {
+      s00 <- s00+1
+    }
+  }
+  list(s11=s11, s01=s01, s10=s10, s00=s00)
+  ##ToDo: stores the logs outside of the function, and use them here
+  return (s11*log(gamma) + s10*log(1-gamma) + s01*log(delta) + s00*log(1-delta))
+}

@@ -1,10 +1,10 @@
 source(jPaste(SBM_PATH, "visualize.R"))
 source(jPaste(SBM_PATH, "mcmc.R"))
-library(igraph)
+##library(igraph)
 
-load(file="truth")
-load(file="ranking")
-load(file="ssRun")
+## load(file="truth")
+## load(file="ranking")
+## load(file="ssRun")
 
 init(truth$sMod)
 

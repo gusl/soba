@@ -1,6 +1,6 @@
 source(jPaste(SBM_PATH, "visualize.R"))
 source(jPaste(SBM_PATH, "mcmc.R"))
-library(igraph)
+##library(igraph)
 
 ##load(file="ranking")
 

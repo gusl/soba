@@ -1,6 +1,6 @@
 source(jPaste(SBM_PATH, "visualize.R"))
 source(jPaste(SBM_PATH, "mcmc.R"))
-library(igraph)
+##library(igraph)
 
 ## read.csv(config-inference.csv)
 ## rather than using 'truth'
@@ -33,7 +33,7 @@ if ("network" %in% dir()){
   useNetwork <- TRUE
   load(file="network")
   ## log P(A | B)
-  objectiveNetwork <- function(model) loglikNetwork(ranking,cz(model), gamma, delta)
+  objectiveNetwork <- function(model) loglikNetwork(network,cz(model), truth$gamma, truth$delta) ##ToDo: remove "truth$"
 }
 
 objective <- function(model) objectiveRanking(model) + objectiveNetwork(model)
