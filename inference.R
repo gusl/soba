@@ -9,7 +9,15 @@ source(jPaste(SBM_PATH, "mcmc.R"))
 
 jCat("ss = ", jPaste(config$searchStrategy))
 
-sSearch <- eval(parse(text=jPaste(config$searchStrategy)))
+
+parseString <- function(s)  strsplit(s,"[\\(\\),]")[[1]]
+
+jCat("config$searchStrategy = ", jPaste(config$searchStrategy))
+parsedStrategy <- parseString(jPaste(config$searchStrategy))
+jCat("parsedStrategy = ", parsedStrategy)
+searchStrategy <- parsedStrategy[1] ##just use the base name
+
+sSearch <- eval(parse(text=jPaste(searchStrategy)))
 jCat("a: sSearch = ")
 print(sSearch)
 
@@ -48,12 +56,20 @@ if (!useRanking && !useNetwork){
 }
 
 prop <- NULL
-##if(config$searchStrategy="sSearch_MH"){
+if(config$searchStrategy=="sSearch_MH"){
   write(file="nIter.tex", config$nIter)
   write(file="nIterPerRestart.tex", config$nIterPerRestart)
   write(file="jumpSize.tex", config$jumpSize)
   prop <- function(x) gProposalFixedNLabels(x,config$jumpSize,numLabels)
-##}
+}
+
+cprime <- NULL
+if(searchStrategy=="sSearch_MOSS"){
+  jCat("The search strategy is MOSS.")
+  cprime <- as.numeric(parsedStrategy[2])
+  jCat("cprime = ", cprime)
+  write(file="cprime.tex", cprime)
+}
 
 init(truth$sMod)  ##is this needed?
 

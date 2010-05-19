@@ -691,7 +691,7 @@ generateNetwork <- function(gamma,delta,zeta,eta){
 
 ##ABSENT: (missing = absent)
 loglikNetwork_ABSENT <- function(network, labeling, gamma, delta) {
-  jCat("loglikNetwork_ABSENT")
+  ##jCat("loglikNetwork_ABSENT")
   s00 <- 0; s10 <- 0; s01 <- 0; s11 <- 0;
 
   isWB <- isWithinBlockVec(labeling)

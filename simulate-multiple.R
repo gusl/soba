@@ -27,6 +27,7 @@ jCat("zeta = ", config$zeta)
 jCat("eta = ", config$eta)
 
 jCat("searchStrategy = ", jPaste(config$searchStrategy))
+##jCat("cprime = ", config$cprime)
 jCat("nRuns = ", config$nRuns)
 
 

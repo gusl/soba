@@ -27,3 +27,6 @@ getEdgeWeights(g)
 library(Rgraphviz)
 source("visualize.R")
 visualizeStructure(g)
+
+
+source("mcmc.R")

@@ -197,7 +197,8 @@ nbhd <- function(state,k){
     for (j in 1:k){
       newState <- state
       newState[i] <- LETTERS[j]
-      if (concat(newState)!=concat(state)){
+      if (concat(newState)!=concat(state) &&
+          (length(unique(newState))==k)){ ##at Jenny's request (18 May 2010)
         count <- count+1        
         S[[count]] <- concat(normalForm(newState))
       }
@@ -496,7 +497,8 @@ fun <- function(model) sum(cz(model)=="A")
 
 moss <- function(initialModel, objective, nSteps, restart=NULL, logNeglect, beforeTime){  
   neighborhood <- function(model) nbhd(cz(model),truth$numLabels)
-  logcprime <- log(0.01)
+  logcprime <- log(cprime)
+  jCat("logcprime = ", logcprime)
   maxIter <- 10000
   maxSizeS <- 1000
   S <- hash()
