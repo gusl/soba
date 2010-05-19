@@ -24,11 +24,13 @@ for (i in 1:n){
   jCat("\n\n************ Running on ", dirName)
   setwd(dirName)
 
+  ##sink(file="log.txt")
   source(jPaste(SBM_PATH, "inference.R"))
   source(jPaste(SBM_PATH, "plotTopModels.R")) ##runs regardless of setting
   source(jPaste(SBM_PATH, "colabelingProbs.R"))
   source(jPaste(SBM_PATH, "consensus.R"))
-
+  ##sink()
+  
   if(doPdflatex){
     t <- system(jPaste(PDFLATEX_PATH, " slides.tex"))
   }

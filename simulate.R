@@ -25,11 +25,11 @@ if(config$generateRanking) {
 
 
 if(config$generateNetwork) {
-  (network <- generateNetwork(truth$gamma,truth$delta))
+  (network <- generateNetwork(truth$gamma,truth$delta,config$zeta,config$eta)) ##ToDo: remove 'truth'
 
   if (doPlots){
     pdf("slide-network.pdf",height=2.5,width=7)
-    visualizeStructure(network,title="simulated network")
+    visualizeStructure(network,title="simulated network (all observed edges)")
     dev.off()
   }
   save(network, file="network")

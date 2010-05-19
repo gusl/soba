@@ -23,6 +23,9 @@ jCat("rtrue = ", config$rtrue)
 jCat("generateNetwork = ", config$generateNetwork)
 jCat("gamma = ", config$gamma)
 jCat("delta = ", config$delta)
+jCat("zeta = ", config$zeta)
+jCat("eta = ", config$eta)
+
 jCat("searchStrategy = ", jPaste(config$searchStrategy))
 jCat("nRuns = ", config$nRuns)
 

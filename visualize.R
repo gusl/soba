@@ -281,7 +281,7 @@ getColor <- function(edgeName){
 }
 
 
-## graphNEL
+## ToDo: color 'absent' edges as red.
 visualizeStructure <- function(gr, title=""){
 ##  gr <- kn
   width <- 20

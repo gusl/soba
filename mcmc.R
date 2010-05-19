@@ -535,6 +535,7 @@ moss <- function(initialModel, objective, nSteps, restart=NULL, logNeglect, befo
       if ((logpost>logcprime+fmax) & (!mprime %in% keys(S))){
         unexploredModels[mprime] <- 1 ##add mprime to unexploredModels          
         S[mprime] <- logpost             ##add mprime to S          
+        print("ACCEPTED")
         
         if (length(S) > maxSizeS) {}  ##do nothing  (##remove worst model)
         if (logpost>fmax){

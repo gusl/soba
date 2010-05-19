@@ -30,10 +30,13 @@ if ("ranking" %in% dir()) {
 }
 if ("network" %in% dir()){
   jCat("using network data")
+  loglikNetwork <- eval(parse(text=jPaste("loglikNetwork_",config$missingNetworkDataModel)))  
   useNetwork <- TRUE
+  
   load(file="network")
+  
   ## log P(A | B)
-  objectiveNetwork <- function(model) loglikNetwork(network,cz(model), truth$gamma, truth$delta) ##ToDo: remove "truth$"
+  objectiveNetwork <- function(model) loglikNetwork(network, cz(model), truth$gamma, truth$delta) ##ToDo: remove "truth$"
 }
 
 objective <- function(model) objectiveRanking(model) + objectiveNetwork(model)

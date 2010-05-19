@@ -650,29 +650,26 @@ sep30 <- function(runs=NULL, nRuns=1){ ##optional argument: set of runs
 ## generateNetwork
 ## loglikNetwork
 
-
-generateNetwork <- function(gamma,delta){
+generateNetwork <- function(gamma,delta,zeta,eta){
   isWB <- isWithinBlockVec(trueLabeling)
   g <- new("graphNEL", nodes = vVect)
   for(edge in edgeNames(kn)){
-    jCat(edge)
+    ##jCat(edge)
     node1 <- parseTilde(edge)[1]
     node2 <- parseTilde(edge)[2]
     
     if(isWB(edge)){
-      ## present with probability gamma
-      if(runif(1)<gamma){
-        ##jCat("W: " , edge, " is present.")
-        g <- addEdge(node1,node2,g)
-      } else {
-        ##jCat("W: " , edge, " is absent.")
+        if(runif(1)<gamma){ ## present with probability gamma
+          if(runif(1)<zeta) g <- addEdge(node1,node2,g,1)
+        } else {
+          if(runif(1)<eta) g <- addEdge(node1,node2,g,0)
+        }
       }
-    } else {
+    else {
       if(runif(1)<delta){
-        ##jCat("B: ", edge, " is present.")
-        g <- addEdge(node1,node2,g)
+        if(runif(1)<zeta) g <- addEdge(node1,node2,g,1)
       } else {
-        ##jCat("B: ", edge, " is absent.")
+        if(runif(1)<eta) g <- addEdge(node1,node2,g,0)
       }
     }
   }
@@ -680,27 +677,88 @@ generateNetwork <- function(gamma,delta){
 }
 
 
-loglikNetwork <- function(network, labeling, gamma, delta) {
+
+
+##presentEdges: g
+##absentEdges: h
+##missingEdges
+
+##'loglikNetwork' depends on the missing data model.
+
+##modify the 'graph' to use edge weights
+
+
+
+##ABSENT: (missing = absent)
+loglikNetwork_ABSENT <- function(network, labeling, gamma, delta) {
+  jCat("loglikNetwork_ABSENT")
   s00 <- 0; s10 <- 0; s01 <- 0; s11 <- 0;
 
   isWB <- isWithinBlockVec(labeling)
   
-  for (edge in edgeNames(network)){ ##present edges
-    ##jCat(edge)
-    if(isWB(edge)) {
-      s11 <- s11+1
-    } else {
-      s01 <- s01+1
+  for (edge in edgeNames(network)){
+    if(getEdgeWeight(network,edge)==1) ##present edge
+      if(isWB(edge)) {
+        s11 <- s11+1
+      } else {
+        s01 <- s01+1
+      }
+    else{  ##absent edges
+      if(isWB(edge)) {
+        s10 <- s10+1
+      } else {
+        s00 <- s00+1
+      }
     }
   }
-  for (edge in edgeNames(complement(network))){ ##absent edges
+  for (edge in edgeNames(complement(network))){ ##unobserved edges, treated as absent
     if(isWB(edge)) {
       s10 <- s10+1
     } else {
       s00 <- s00+1
     }
   }
-  list(s11=s11, s01=s01, s10=s10, s00=s00)
   ##ToDo: stores the logs outside of the function, and use them here
   return (s11*log(gamma) + s10*log(1-gamma) + s01*log(delta) + s00*log(1-delta))
+}
+
+
+##MAR: (missing at random)
+## This is computationally the easiest
+loglikNetwork_MAR <- function(network, labeling, gamma, delta) {
+##  jCat("loglikNetwork_MAR")
+  s00 <- 0; s10 <- 0; s01 <- 0; s11 <- 0;
+##  print(getEdgeWeights(network))
+  
+  isWB <- isWithinBlockVec(labeling)
+
+  for (edge in edgeNames(network)){
+##    jCat(edge)
+##    jCat("Setting edge weight to ", getEdgeWeight(network,edge))
+    if(getEdgeWeight(network,edge)==1) ##present edge
+      if(isWB(edge)) {
+        s11 <- s11+1
+      } else {
+        s01 <- s01+1
+      }
+    else{  ##absent edges
+      if(isWB(edge)) {
+        s10 <- s10+1
+      } else {
+        s00 <- s00+1
+      }
+    }
+  }
+  ##ToDo: stores the logs outside of the function, and use them here
+  return (s11*log(gamma) + s10*log(1-gamma) + s01*log(delta) + s00*log(1-delta))
+}
+
+
+getEdgeWeight <- function(g, edgeName){
+  nodePair <- parseTilde(edgeName)
+  edgeData(g, from=nodePair[1], to=nodePair[2])[[1]]$weight
+}
+
+getEdgeWeights <- function(g){
+  sapply(edgeNames(g), function(edge) getEdgeWeight(g,edge))
 }
