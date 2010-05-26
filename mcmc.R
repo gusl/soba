@@ -344,7 +344,15 @@ accountForDiscard <- function(){
 
 
 ##no scaling
-sSearch_MH <- function(proposal, initial, objective, nSteps, restart=NULL, logNeglect){
+sSearch_MH <- function(objective, parsedStrategy){
+  ##ToDo: get these settings from parsedStrategy
+  nSteps <- 2000
+  restart <- NULL
+  logNeglect <- log(1000)
+  prop <- function(x) gProposalFixedNLabels(x,config$jumpSize,numLabels)
+  (initial <- randomLabeling(length(truth$Nodes)))
+
+  
   ##neglect: if it's smaller than the max by a factor of 'neglect' or more, throw it out.
   
   nModels <- c(); mass <- c(); time <- c();
@@ -380,90 +388,7 @@ sSearch_MH <- function(proposal, initial, objective, nSteps, restart=NULL, logNe
   list(samples=h,runTime=time,mass=mass,nModels=nModels)
 }
 
-##throw out models that score poorly
-cleanup <- function(S,threshold){
-  jCat("threshold = ", threshold)
-    k <- keys(S); v <- values(S)
-    for (i in 1:length(S)){
-    if (v[i]<threshold){
-      ##print(h)
-      ##jCat("k[i] = ", k[i])
-      S[[k[i]]] <- NULL
-    }
-  }
-  S
-}
 
-
-## randomly pick one
-## explore neighborhood
-## throw out the ones
-## 
-
-
-##beforeTime <- NULL ##declare as global
-
-sSearch_MOSS <- function(proposal, initial, objective, nSteps, restart=NULL, logNeglect){
-  ## ToDo:
-  ## get rid of 'proposal': that is a property of sSearch_MH
-
-  beforeTime <- as.numeric(Sys.time())
-  jCat("beforeTime = ", beforeTime)
-
-  ## run greedy for 100 random restarts
-  localMaxima <- hash()
-  for (i in 1:1){
-    jCat("--- Greedy maximization:  random restart #", i)
-    initialModel <- concat(normalForm(randomLabeling(length(Nodes))))
-    localMaximum <- greedyMaximize(objective, nbhd, initialModel)$incumbent
-    if (!has.key(localMaximum,localMaxima))
-      localMaxima[localMaximum] <- 1
-    else
-      localMaxima[localMaximum] <-  localMaxima[[localMaximum]] + 1
-  }
- 
-  print(localMaxima)
-
-  ## now... are there any local minima we wish to discard?
-
-  peaks <- sapply(keys(localMaxima), objective)  
-  names(peaks) <- keys(localMaxima)
-  jCat("peaks = "); print(peaks)
-  peaks <- sort(peaks, decreasing=TRUE)[1] ##only keep the top one
-  jCat("after: peaks = "); print(peaks)
-  
-  ##cleanup(, max(heights)+log(0.01))
-  
-  ## run MOSS once for each
-  mossRun <- NULL
-  count <- 0
-  for (m in names(peaks)){
-    count <- count+1
-    mossRun <- moss(m, objective, nSteps, restart=NULL, logNeglect, beforeTime)
-  }
-  
-  jCat("mossRun = ")
-  print(mossRun)
-
-  list(samples=mossRun$samples,runTime=mossRun$runTime,mass=mossRun$mass,nModels=mossRun$nModels)
-  
-##   jCat("--1--")
-##   mossRuns[1]$samples
-##     jCat("--2--")
-##   keys(mossRuns[1]$samples)
-##     jCat("--3--")
-  
-##   ## merge the results
-##   mergedSamples <- unique(c(keys(mossRuns[1]$samples), keys(mossRuns[2]$samples)))
-##   jCat("mergedSamples = "); print(mergedSamples)
-##   mergedObj <- objective(mergedSamples)
-##   jCat("mergedObj = "); print(mergedObj)
-##   mergedValues <- exp(mergedObj)
-##   jCat("mergedValues = "); print(mergedValues)
-##   mergedMass <- sum(mergedValues)
-##   jCat("mergedMass = "); print(mergedMass)
-}
-  
 
 greedyMaximize <- function(objective, neighborhood, initial){
   incumbent <- initial
@@ -489,32 +414,170 @@ greedyMaximize <- function(objective, neighborhood, initial){
 }
 
 
+
+##throw out models that score poorly
+cleanup <- function(S,threshold){
+  jCat("threshold = ", threshold)
+    k <- keys(S); v <- values(S)
+    for (i in 1:length(S)){
+    if (v[i]<threshold){
+      ##print(h)
+      ##jCat("k[i] = ", k[i])
+      S[[k[i]]] <- NULL
+    }
+  }
+  S
+}
+
+
+## randomly pick one
+## explore neighborhood
+## throw out the ones
+## 
+##beforeTime <- NULL ##declare as global
+
+
+## n random starting points
+randomModels <- function(n){
+  l <- list()
+  for (i in 1:n) l[[i]] <- concat(normalForm(randomLabeling(length(truth$Nodes))))
+  l
+}
+
+edgeRankingToMatrix <- function(ranking){
+  m <- matrix(nrow=nv,ncol=nv)
+  count <- 0
+  for(edge in ranking){
+    count <- count + 1
+    pt <- parseTilde(edge)
+    node1 <- pt[1]; node2 <- pt[2]
+    index1 <- match(node1,Nodes); index2 <- match(node2,Nodes)
+    m[index2,index1] <- count
+  }
+  as.dist(m)
+}
+
+
+initialGuess <- function(ranking, k){
+  hc <- hclust(d, method = "single")
+
+  cutree(hc, inspect)
+}
+
+inspect <- function(stuff){
+  q <- as.character(match.call()[2])
+  if (length(stuff)==1 && !is.data.frame(stuff)) ##not a proper vector / matrix / complex object
+    jCat(q, " = ", stuff)
+  else 
+    jCat(q, " = "); print(stuff)
+}
+
+## single mergings
+mergings <- function(model) {
+  k <- length(unique(cz(model)))
+  l <- list()
+  count <- 0
+  for (i in 1:(numLabels-1)) {
+    for (j in (i+1):numLabels){
+      count <- count+1
+      inspect(c(i,j))
+      s <- gsub(LETTERS[i],LETTERS[j],model)
+      inspect(s)
+      l[[count]] <- concat(normalForm(cz(s)))
+    }
+  }
+  l
+}
+
+## mergings("AABBCC")
+
+
+rankCluster <- function(ranking){
+  initialModels <- list()
+  load(file="ranking")
+  print(ranking)
+  d <- edgeRankingToMatrix(ranking)
+  jCat("d = "); print(d)
+  hc <- hclust(d, method="single")
+  clusters <- concat(normalForm(cutree(hc,numLabels)))
+  initialModels[[1]] <- clusters
+
+  clusters2 <- concat(normalForm(cutree(hc,numLabels+1)))
+  merges <- mergings(clusters2)
+
+  for(i in seq_along(merges))
+    initialModels[[i+1]] <- merges[[i]]
+  
+  initialModels
+}
+
+
+## ToDo: get rid of 'proposal': that is a property of sSearch_MH
+sSearch_MOSS <- function(objective, parsedStrategy, initialModels=NULL){
+  beforeTime <- as.numeric(Sys.time()); jCat("beforeTime = ", beforeTime)
+  cprime <- as.numeric(parsedStrategy[2]); jCat("cprime = ", cprime); write(file="cprime.tex", cprime)
+
+  ##ToDo: initialize 'moss' from multiple points
+  ##ToDo: initialize using 'hclust'
+  
+  ### if (initialModels==NULL) initialModels <- randomModels(5)
+ if (is.null(initialModels))
+   initialModels <- rankCluster()
+  
+  
+  jCat("initialModels = "); print(initialModels)
+  
+  mossRun <- moss(initialModels, objective, cprime, beforeTime)
+  jCat("mossRun = "); print(mossRun)
+  list(samples=mossRun$samples,runTime=mossRun$runTime,mass=mossRun$mass,nModels=mossRun$nModels)
+}
+
 fun <- function(model) sum(cz(model)=="A")
 
 
 ## greedyMaximize(fun, nbhd, "ABC")
 
 
-moss <- function(initialModel, objective, nSteps, restart=NULL, logNeglect, beforeTime){  
+##ToDo: initialModels! use multiple!
+moss <- function(initialModels, objective, cprime, beforeTime, exploreInitialNeighbors=FALSE){  ##ToDo: remove 'restart'
+  jCat("entered moss")
   neighborhood <- function(model) nbhd(cz(model),truth$numLabels)
+  jCat("cprime = ", cprime)
   logcprime <- log(cprime)
   jCat("logcprime = ", logcprime)
   maxIter <- 10000
   maxSizeS <- 1000
-  S <- hash()
-  unexploredModels <- hash() ##subset of S
-  nModels <- c(); mass <- c(); incumbents <- c(); objectives <- c(); runTime <- c()
 
-  incumbent <- initialModel
-  initialObj <- objective(initialModel)
-  S[initialModel] <- initialObj
-  fmax <- initialObj
-  unexploredModels[initialModel] <- 1
+  S <- hash(); unexploredModels <- hash()
+  for(model in initialModels){
+    S[model] <- objective(model)
+    unexploredModels[model] <- 1
+  }
+
+  ##first, to give every starting point a fair chance, we add all their neighbors to S, and mark the initial ones as explored; do not remove any models at this stage!
+  if(exploreInitialNeighbors){
+    for (m in keys(S)){
+      jCat("adding the neighbors of ", m)
+      unexploredModels[m] <- NULL   ##marking initialModels as explored.
+      for (mprime in neighborhood(m)){
+        jCat("adding ", mprime)
+        logpost <- objective(mprime)
+        if (!mprime %in% keys(S)){
+          unexploredModels[mprime] <- 1 ##add mprime to unexploredModels
+          S[mprime] <- logpost          ##add mprime to S
+        }
+      }
+    }
+  }
+  jCat("length(unexploredModels) = ", length(unexploredModels))
+
+  incumbent <- keys(S)[which.max(values(S))]
+  fmax <- max(values(S))
   
+  nModels <- c(); mass <- c(); incumbents <- c(); objectives <- c(); runTime <- c()
   for (i in 1:maxIter){
     jCat("MOSS: i = ", i)
-    ##jCat("S = ")
-    ##print(S)
+    jCat("S = "); print(S)
     if(length(unexploredModels)>0){
       m <- sample(keys(unexploredModels),1) ##should not sample uniformly      
 
@@ -545,14 +608,14 @@ moss <- function(initialModel, objective, nSteps, restart=NULL, logNeglect, befo
           fmax <- logpost
           S <- cleanup(S,logcprime+fmax)
         }
-      }      
+      }
     }
     unexploredModels[m] <- NULL ##ToDo: mark as explored with a "0", instead of removing it
     
     nModels[i] <- length(S)
     mass[i] <- sum(exp(values(S))); jCat("mass[i] = ", mass[i])
     runTime[i] <- as.numeric(Sys.time()) - beforeTime; jCat("runTime[i] = ", runTime[i])
-    incumbents[i] <- incumbent; jCat("incumbent = ", incumbent)
+    incumbents[i] <- incumbent; jCat("incumbent = ", incumbent, " with objective ", fmax)
     objectives[i] <- fmax
   }
   jCat("MOSS: finished")

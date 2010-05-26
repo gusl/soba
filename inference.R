@@ -60,15 +60,11 @@ if(config$searchStrategy=="sSearch_MH"){
   write(file="nIter.tex", config$nIter)
   write(file="nIterPerRestart.tex", config$nIterPerRestart)
   write(file="jumpSize.tex", config$jumpSize)
-  prop <- function(x) gProposalFixedNLabels(x,config$jumpSize,numLabels)
 }
 
 cprime <- NULL
 if(searchStrategy=="sSearch_MOSS"){
   jCat("The search strategy is MOSS.")
-  cprime <- as.numeric(parsedStrategy[2])
-  jCat("cprime = ", cprime)
-  write(file="cprime.tex", cprime)
 }
 
 init(truth$sMod)  ##is this needed?
@@ -77,12 +73,10 @@ init(truth$sMod)  ##is this needed?
 Labels <- truth$Labels ##(Labels <- LETTERS[1:numLabels])
 ##Q: is this needed? A: because we could conider more labels than the truth
 
-(initial <- randomLabeling(length(truth$Nodes)))
-
 Rprof("ram-profile.txt", memory.profiling=TRUE)
 beforeT <- as.numeric(as.POSIXct(Sys.time()))
 
-ssRun <- sSearch(prop, initial, objective, config$nIter, restart=config$nIterPerRestart, logNeglect=1000)
+ssRun <- sSearch(objective, parsedStrategy)
 
 afterT <-  as.numeric(as.POSIXct(Sys.time()))
 Rprof(NULL)
