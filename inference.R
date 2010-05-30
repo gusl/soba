@@ -18,11 +18,12 @@ jCat("parsedStrategy = ", parsedStrategy)
 searchStrategy <- parsedStrategy[1] ##just use the base name
 
 sSearch <- eval(parse(text=jPaste(searchStrategy)))
+##inspect(sSearch)
 jCat("a: sSearch = ")
 print(sSearch)
 
 
-load(file="truth") ##not needed!!
+##load(file="truth") ##not needed!!
 
 useRanking <- FALSE; useNetwork <- FALSE
 objectiveRanking <- function(model) 0
@@ -30,21 +31,20 @@ objectiveNetwork <- function(model) 0
 
 ## the likelihood is determined by what data is available
 if ("ranking" %in% dir()) {
-    jCat("using edge ranking data")
+  jCat("using edge ranking data")
   useRanking <- TRUE
   load(file="ranking")
   ## log P(pi | B)
-  objectiveRanking <- function(model) loglikRankingVec(ranking,cz(model), truth$r) ##ToDo: remove "truth$"
+  objectiveRanking <- function(model) loglikRankingVec(ranking,cz(model), config$r) ##ToDo: remove "truth$"
 }
 if ("network" %in% dir()){
   jCat("using network data")
   loglikNetwork <- eval(parse(text=jPaste("loglikNetwork_",config$missingNetworkDataModel)))  
-  useNetwork <- TRUE
-  
+  useNetwork <- TRUE    
   load(file="network")
-  
+    
   ## log P(A | B)
-  objectiveNetwork <- function(model) loglikNetwork(network, cz(model), truth$gamma, truth$delta) ##ToDo: remove "truth$"
+  objectiveNetwork <- function(model) loglikNetwork(network, cz(model), config$gamma, config$delta) ##ToDo: remove "truth$"
 }
 
 objective <- function(model) objectiveRanking(model) + objectiveNetwork(model)
@@ -67,12 +67,6 @@ if(searchStrategy=="sSearch_MOSS"){
   jCat("The search strategy is MOSS.")
 }
 
-init(truth$sMod)  ##is this needed?
-
-
-Labels <- truth$Labels ##(Labels <- LETTERS[1:numLabels])
-##Q: is this needed? A: because we could conider more labels than the truth
-
 Rprof("ram-profile.txt", memory.profiling=TRUE)
 beforeT <- as.numeric(as.POSIXct(Sys.time()))
 
@@ -84,20 +78,10 @@ Rprof(NULL)
 write(afterT - beforeT, file="time.txt")
 
 
-##rename 'loglik' to 'loglikRanking'
-
-##### P(B | pi, A)
-##objective <- function(model) loglikRanking(ranking,model,truth$r, truth$gamma, truth$delta) + loglikNetwork(network)
-##
-##ssRun <- sSearch(prop, initial, objective, config$nIter, restart=config$nIterPerRestart, logNeglect=1000)
-
-
 
 models <- keys(ssRun$samples)
 
 jCat("ssRun = "); print(ssRun)
-##jCat("ssRun$samples = ")
-##print(ssRun$samples)
 
 post <- sapply(models, function(x) exp(objective(x)))
 jCat("post = ")

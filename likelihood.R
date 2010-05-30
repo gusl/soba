@@ -12,30 +12,30 @@ init <- function(sMod){
   M <<- length(sMod)                       # number of modules
   (nv <<- sum(sMod))                         # number of nodes
   (ne <<- choose(nv, 2))                     # number of edges
-  vList <<- lapply(seq_len(M), function(m) { return(paste(LETTERS[m], seq_len(sMod[m]), sep = "")) })
+  vList <<- lapply(seq_len(M), function(m) { return(paste(LETTERS[m], seq_len(sMod[m]), sep = "")) })  ##ToDo: use 1:M, 1:sMod[m], jPaste
   names(vList) <<- LETTERS[1:M]
-  (vVect <<- unlist(vList)) ## vVect: vector of all nodes (ignores modules)
+  (vVect <<- unlist(vList)) ## vVect: vector of all nodes (ignores modules)    is this ever used? Shouldn't we always use 'Nodes' instead?
   Nodes <<- unlist(vList, use.names=FALSE)
   trueLabeling <<- sapply(names(unlist(vList)),function(str) cz(str)[1])
   numLabels <<- length(vList)
   
   ##all edges are appearing twice!
   ##required by the undirected graph data structure!
-  eList <<- lapply(seq_along(vVect), function(i) { return(list(edges = (seq_along(vVect)[-i])))})
+  eList <<- lapply(seq_along(vVect), function(i) { return(list(edges = (seq_along(vVect)[-i])))}) ## ToDo: use 1:n, (1:n)[-i]
   
   names(eList) <<- vVect
   (kn <<- new("graphNEL", nodes = vVect, edgeL = eList))
 
-  ##is it possible to create a graphNEL by passing edge names instead?
-  
-  
-  (gr2 <<- new("graphNEL", nodes = vVect))
+  ##is it possible to create a graphNEL by passing edge names instead?    
+  ##(gr2 <<- new("graphNEL", nodes = vVect))
 
   ##set up labels
   for (i in 1:length(vList)){ names(vList[[i]]) <<- rep(LETTERS[i], sMod[i]) }
 
   availableLetters <<- setdiff(LETTERS,LETTERS[1:M])
 }
+
+
 
 numWithinEdgesVec <- function(vec){
   ##jCat("vec = ", vec)
@@ -153,7 +153,7 @@ vlistCoordinates <- function(vList,node){
 
 ##e.g. vec = c("A" "A" "A" "B" "B")
 isWithinBlockVec <- function(vec){
-  nodes <- unlist(vList)
+  ##nodes <- unlist(vList)
   h <- hash(keys=Nodes,values=1:length(Nodes)) ##efficiency: pull this out
   return(function(edgeName){
     ##jCat("edgeName = ", edgeName)
@@ -759,6 +759,7 @@ getEdgeWeight <- function(g, edgeName){
   edgeData(g, from=nodePair[1], to=nodePair[2])[[1]]$weight
 }
 
+##weights of graph g
 getEdgeWeights <- function(g){
   sapply(edgeNames(g), function(edge) getEdgeWeight(g,edge))
 }

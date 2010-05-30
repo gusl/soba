@@ -2,12 +2,9 @@ source(jPaste(SBM_PATH, "visualize.R"))
 source(jPaste(SBM_PATH, "mcmc.R"))
 ##library(igraph)
 
-##load(file="ranking")
 
-load(file="truth")
 load(file="ssRun") ##loads 'post'
 
-init(truth$sMod) ## shouldn't we replace this with a loaded variable?
 
 samplesHash <- ssRun$samples
 

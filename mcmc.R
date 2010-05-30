@@ -54,7 +54,7 @@ randomNodeIndex <- function(){
 
 ##requires 'labels' to be declared;  take it as an argument?
 randomLabel <- function(){
-  Labels <- truth$Labels
+  Labels <- LETTERS[1:config$k]
   Labels[ceiling(length(Labels)*runif(1))]
 }
 
@@ -453,24 +453,11 @@ edgeRankingToMatrix <- function(ranking){
     node1 <- pt[1]; node2 <- pt[2]
     index1 <- match(node1,Nodes); index2 <- match(node2,Nodes)
     m[index2,index1] <- count
+    ##m[index1,index2] <- count
   }
   as.dist(m)
 }
 
-
-initialGuess <- function(ranking, k){
-  hc <- hclust(d, method = "single")
-
-  cutree(hc, inspect)
-}
-
-inspect <- function(stuff){
-  q <- as.character(match.call()[2])
-  if (length(stuff)==1 && !is.data.frame(stuff)) ##not a proper vector / matrix / complex object
-    jCat(q, " = ", stuff)
-  else 
-    jCat(q, " = "); print(stuff)
-}
 
 ## single mergings
 mergings <- function(model) {
@@ -498,11 +485,13 @@ rankCluster <- function(ranking){
   print(ranking)
   d <- edgeRankingToMatrix(ranking)
   jCat("d = "); print(d)
-  hc <- hclust(d, method="single")
+  hc <- hclust(d, method="average")
   clusters <- concat(normalForm(cutree(hc,numLabels)))
+  inspect(clusters)
   initialModels[[1]] <- clusters
 
   clusters2 <- concat(normalForm(cutree(hc,numLabels+1)))
+  inspect(clusters2)
   merges <- mergings(clusters2)
 
   for(i in seq_along(merges))
@@ -541,7 +530,7 @@ fun <- function(model) sum(cz(model)=="A")
 ##ToDo: initialModels! use multiple!
 moss <- function(initialModels, objective, cprime, beforeTime, exploreInitialNeighbors=FALSE){  ##ToDo: remove 'restart'
   jCat("entered moss")
-  neighborhood <- function(model) nbhd(cz(model),truth$numLabels)
+  neighborhood <- function(model) nbhd(cz(model),config$k)
   jCat("cprime = ", cprime)
   logcprime <- log(cprime)
   jCat("logcprime = ", logcprime)
@@ -549,11 +538,14 @@ moss <- function(initialModels, objective, cprime, beforeTime, exploreInitialNei
   maxSizeS <- 1000
 
   S <- hash(); unexploredModels <- hash()
+  inspect(initialModels)
+  print(objective)
   for(model in initialModels){
+    inspect(model)
     S[model] <- objective(model)
     unexploredModels[model] <- 1
   }
-
+  
   ##first, to give every starting point a fair chance, we add all their neighbors to S, and mark the initial ones as explored; do not remove any models at this stage!
   if(exploreInitialNeighbors){
     for (m in keys(S)){

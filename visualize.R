@@ -70,7 +70,7 @@ colGreys <- makeColorFn("Greys")
 ##how to share plots when you have two plotting functions?
 
 makeHeatmapRanking <- function(ranking, makeText=TRUE){
-  Nodes <- truth$Nodes
+  ##Nodes <- truth$Nodes
   k <- length(Nodes)
   par(xaxt="n",yaxt="n")
   plot(c(-.25*k,k),c(0,k+1.5), type="n",xlab="",ylab="", bty="n", asp=1)
@@ -123,7 +123,7 @@ makeHeatmapPostRI <- function(post,f,k,makeText=TRUE, trueStructure=NULL, comput
   prop <- c()
   prop[1:kFound] <- proportion[1:kFound]
   
-  if(is.na(match(truth$structure,labs))){   ##if the truth isn't among the topk
+  if(isSimulationStudy && is.na(match(truth$structure,labs))){   ##if the truth isn't among the topk
     labs[k+1] <- truth$structure
     prop[k+1] <- exp(objective(cz(truth$structure)))/totalMass ##not adding to 1 currently, but close.
     jCat("cz(trueStructure) = ", cz(truth$structure))
@@ -132,7 +132,7 @@ makeHeatmapPostRI <- function(post,f,k,makeText=TRUE, trueStructure=NULL, comput
   }
 
   ##add random junk labelings
-  n <- sum(sMod)
+  n <- length(Nodes)
   for (i in seq_along(rep(0,2))){
     labs[k+1] <- Reduce(jPaste,randomLabeling(n))
     k <- k+1
@@ -175,7 +175,7 @@ makeHeatmapPostRI <- function(post,f,k,makeText=TRUE, trueStructure=NULL, comput
     write(labs[consensusIndex], file="consensus-RI.tex")
 
     write(jPaste("\"name\", \"consensus\", \"score\""), file="consensusResults.csv", append=TRUE)
-    write(jPaste("randDist, ", labs[consensusIndex], ", ", randIndex(truth$structure, labs[consensusIndex])), file="consensusResults.csv", append=TRUE)
+    if(isSimulationStudy) write(jPaste("randDist, ", labs[consensusIndex], ", ", randIndex(truth$structure, labs[consensusIndex])), file="consensusResults.csv", append=TRUE)
   }
   
   
@@ -185,7 +185,7 @@ makeHeatmapPostRI <- function(post,f,k,makeText=TRUE, trueStructure=NULL, comput
     dispText <- jPaste(10^3*round(prop[i],3), " : ",labs[i])
     text(0,k-i+0.5,dispText,pos=2)
     
-    if(labs[i]==truth$structure){ ##boldface it
+    if(isSimulationStudy && labs[i]==truth$structure){ ##boldface it
       text(0+0.03,k-i+0.5,dispText,pos=2)
       text(0,k-i+0.5+0.03,dispText,pos=2)
       text(0+0.03,k-i+0.5+0.03,dispText,pos=2)
@@ -217,7 +217,6 @@ makeHeatmapPostRI <- function(post,f,k,makeText=TRUE, trueStructure=NULL, comput
 
 #makes a heatmap, given the hashtable 'post'
 makeHeatmapColabeling <- function(colabelingProbs,makeText=TRUE, trueStructure=NULL){
-  Nodes <- truth$Nodes
   ##edgeLabels <- names(colabelingProbs) ##edge labels (numbered like: 1,2)
   k <- length(Nodes)
   

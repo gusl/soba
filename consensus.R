@@ -3,8 +3,7 @@ load(file="truth")
 load(file="ssRun")
 load(file="colabelingProbs")
 
-
-jCat("truth$structure = ", truth$structure)
+if (isSimulationStudy) jCat("truth$structure = ", truth$structure)
 
 ##ToDo: instead of matrix, do it for the entries in the lower-triangle.
 
@@ -53,9 +52,9 @@ singleNbhd <- function(labeling){
     currentLabel <- match(lab[i],LETTERS)-1
     newLabeling <- lab
     
-    for (j in 1:(truth$numLabels-1)){ ## for each relabeling
+    for (j in 1:(config$k-1)){ ## for each relabeling
       count <- count+1
-      newLabel <- (currentLabel+j)%%(truth$numLabels) ##mod k      
+      newLabel <- (currentLabel+j)%%(config$k) ##mod k      
       newLabeling[i] <- LETTERS[newLabel+1]
       set[count] <- Reduce(jPaste,newLabeling)
     }
@@ -71,7 +70,7 @@ greedySearch <- function(objective, nbhd, initial){
   currentLab <- initial
   prevCurrentLab <- "null"
   count <- 0
-  while(count<2*length(truth$Nodes)) ## && currentLab!=prevCurrentLab)
+  while(count<2*length(Nodes)) ## && currentLab!=prevCurrentLab)
     ##hypothesis: it always stops after
     {
       count <- count+1
@@ -92,6 +91,8 @@ initial <- Reduce(jPaste,randomLabeling(nrow(colPrMat)))
 consensusColpr <- greedySearch(obj, singleNbhd, initial)
 normalizedConsensusColpr <- concat(normalForm(cz(consensusColpr)))
 write(normalizedConsensusColpr, file="consensus-colabeling.tex")
+
+
 ##h <- test()
 
 
@@ -122,8 +123,11 @@ test <- function(){
 
 
 ##jCat("config$truth = ", config$truth[[1]])
-(riColpr <- randIndex(truth$structure, normalizedConsensusColpr))
-(riCut <- randIndex(truth$structure, normalizedConsensusCut))
+
+if(isSimulationStudy){
+  riColpr <- randIndex(truth$structure, normalizedConsensusColpr)
+  riCut <- randIndex(truth$structure, normalizedConsensusCut)
+}
 
 jCat("riColpr = ", riColpr)
 jCat("riCut = ", riCut)
@@ -136,18 +140,21 @@ write(jPaste("cut, ", normalizedConsensusCut, ", ",  riCut), file="consensusResu
 (thresholded <- (colPrMat > 0.5))
 
 ##assign different symbols to all nodes
-(labs <- LETTERS[1:length(truth$Nodes)])
+(labs <- LETTERS[1:length(Nodes)])
 ##if they are connected, they get the same letter as the left one
-for (i in seq_along(truth$Nodes)){
-  for (j in seq_along(truth$Nodes)){
+for (i in seq_along(Nodes)){
+  for (j in seq_along(Nodes)){
     if (thresholded[i,j]){
       labs[j] <- labs[i]
     }
   }
 }
 consensusThresh <- concat(normalForm(labs))
-riThresh <- randIndex(truth$structure, consensusThresh)
-write(jPaste("thresh, ", consensusThresh, ", ", riThresh), file="consensusResults.csv", append=TRUE)
+
+if (isSimulationStudy) {
+  riThresh <- randIndex(truth$structure, consensusThresh)
+  write(jPaste("thresh, ", consensusThresh, ", ", riThresh), file="consensusResults.csv", append=TRUE)
+}
 
 jCat("writing consensus")
 
@@ -157,5 +164,8 @@ jCat("writing consensus")
 ## posterior
 models <- keys(ssRun$samples)
 consensusMode <- models[which.max(post)]
-riMode <- randIndex(truth$structure, consensusMode)
-write(jPaste("mode, ", consensusMode, ", " , riMode), file="consensusResults.csv", append=TRUE)
+
+if(isSimulationStudy){
+  riMode <- randIndex(truth$structure, consensusMode)  
+  write(jPaste("mode, ", consensusMode, ", " , riMode), file="consensusResults.csv", append=TRUE)
+}
